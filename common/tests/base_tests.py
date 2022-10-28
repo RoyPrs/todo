@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# parnia/common/tests/base_tests.py
+# todo/common/tests/base_tests.py
 #
 
 import json
@@ -9,15 +9,13 @@ from django.contrib.auth import get_user_model, models
 from django.test import TestCase
 
 
-
 UserModel = get_user_model()
 
 
 # class BaseTest(RecordCreation, TestCase):
 class BaseTest(TestCase):
-    _TEST_USERNAME = 'BaseTestUser'
-    _TEST_PASSWORD = 'TestPassword_007'
-    _TEST_GROUP = 'TestGroup'
+    _TEST_USERNAME = "BaseTestUser"
+    _TEST_PASSWORD = "TestPassword_007"
 
     def __init__(self, name):
         super().__init__(name)
@@ -26,15 +24,18 @@ class BaseTest(TestCase):
     def setUp(self):
         self.user = self._create_user()
 
-    # def _create_user(self, username=_TEST_USERNAME, email=None,
-    #                  password=_TEST_PASSWORD, is_superuser=True,
-    #                  role=UserModel.DEFAULT_USER):
-    def _create_user(self, username=_TEST_USERNAME, email=None,
-                     password=_TEST_PASSWORD, is_superuser=True):
-        # user = UserModel.members.create_user(username=username,
-        #                                      password=password, role=role)
-        user = UserModel.members.create_user(username=username,
-                                             password=password)
+    def _create_user(
+        self,
+        username=_TEST_USERNAME,
+        email=None,
+        password=_TEST_PASSWORD,
+        is_superuser=True,
+        role=UserModel.DEVELOPER,
+    ):
+        user = UserModel.members.create_user(
+            username=username, password=password, role=role
+        )
+
         user.first_name = "Test"
         user.last_name = "User"
         user.is_active = True
@@ -42,15 +43,14 @@ class BaseTest(TestCase):
         user.is_superuser = is_superuser
         user.save()
         return user
-    
 
     def _has_error(self, response, message=None):
         result = False
 
-        if hasattr(response, 'context_data'):
-            if response.context_data.get('form').errors:
+        if hasattr(response, "context_data"):
+            if response.context_data.get("form").errors:
                 result = True
-        elif hasattr(response, '__str__'):
+        elif hasattr(response, "__str__"):
             if message in str(response):
                 result = True
 

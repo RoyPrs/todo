@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# parnia/common/view_mixins.py
+# todo/common/view_mixins.py
 #
 
 """
@@ -13,7 +13,6 @@ from rest_framework.serializers import ValidationError
 
 
 class TrapDjangoValidationErrorCreateMixin:
-
     def perform_create(self, serializer):
         try:
             instance = serializer.save()
@@ -22,7 +21,6 @@ class TrapDjangoValidationErrorCreateMixin:
 
 
 class TrapDjangoValidationErrorUpdateMixin:
-
     def perform_update(self, serializer):
         try:
             instance = serializer.save()

@@ -37,10 +37,3 @@ class TaskAdmin(admin.ModelAdmin):
         queryset.filter(is_finished=True).update(is_finished=False)
 
     mark_unfinished.short_description = "Mark the task as unfinished"
-
-
-# Do we need ModelAdmin at all?
-# If you are happy with the default admin interface, you don’t need
-# to define a ModelAdmin object at all – you can register the model class
-# without providing a ModelAdmin description;
-# admin.site.register(Author)

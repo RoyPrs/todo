@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# parnia/common/serializer_mixin.py
+# todo/common/serializer_mixin.py
 #
 """
 Global serializer mixins
@@ -17,9 +17,8 @@ UserModel = get_user_model()
 # SerializerMixin
 #
 class SerializerMixin:
-
     def get_request(self):
-        return self.context.get('request', None)
+        return self.context.get("request", None)
 
     def get_user_object(self):
         request = self.get_request()

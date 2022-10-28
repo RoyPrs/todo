@@ -11,13 +11,20 @@ __docformat__ = "restructuredtext en"
 import logging
 
 from django.db import models
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import (
+    AbstractUser,
+    BaseUserManager,
+    get_user_model,
+)
 from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.mail import send_mail
+
+
+UserModel = get_user_model()
 
 from task_management.models import Project
 
@@ -207,16 +214,16 @@ class User(AbstractUser, ValidateOnSaveMixin, models.Model):
         if hasattr(self, "role"):
             role = self.role
         if role:
-            if role == "MANAGER":
+            if role == self.ROLE_MAP[UserModel.MANAGER]:
                 try:
                     project = Project.objects.get(manager=self)
                 except Project.DoesNotExist:
                     return project
-            elif role == "DEVELOPER":
-                try:
-                    project = self.task_set.first().project
-                except:
-                    return project
+        elif role == self.ROLE_MAP[UserModel.DEVELOPER]:
+            try:
+                project = self.task_set.first().project
+            except:
+                return project
         return project
 
     def assign_project(self, project):
@@ -224,15 +231,13 @@ class User(AbstractUser, ValidateOnSaveMixin, models.Model):
         This method assigns project to a project manager.
 
         """
-        print("in assign", project)
         msg = _(f"Projects can be only assigned to project managers.")
         if hasattr(self, "role"):
             role = self.role
-        if role != "MANAGER":
+        if role and role != self.ROLE_MAP[UserModel.MANAGER]:
             raise ValidationError({"role": msg})
         self.project = project
         self.save()
-        print(self.project)
 
     def assign_tasks(self, tasks):
         """
@@ -244,25 +249,23 @@ class User(AbstractUser, ValidateOnSaveMixin, models.Model):
         role = None
         if self.role:
             role = self.role
-
-        if role and role != "DEVELOPER":
+        if role and role != self.ROLE_MAP[UserModel.DEVELOPER]:
             raise ValidationError({"role": msg1})
+
         current_project = [self.get_project()]
         new_projects = [task.project for task in tasks]
         all_projects = new_projects + current_project
         print("all projects", all_projects)
+
         if len(set(all_projects)) > 1:
             raise ValidationError({"project": msg2})
-
         task_list = [task.pk for task in tasks]
         self.task_set.set(task_list)
 
     def get_full_name_or_username(self):
         result = self.get_full_name()
-
         if result.strip() == "":
             result = self.username
-
         return result
 
     def get_full_name_reversed(self):

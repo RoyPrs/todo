@@ -64,6 +64,10 @@ class Project(ValidateOnSaveMixin, models.Model):
         return tasks or "No tasks set yet."
 
     def assign_project_manager(self, manager):
+        role = None
+        if hasattr(manager , "role"):
+            role = manager.role
+        if role != 
         pass
 
     def discharge_project_manager(self, manager):
@@ -76,8 +80,11 @@ class Project(ValidateOnSaveMixin, models.Model):
         pass
 
     @property
-    def is_finished():
-        pass
+    def is_finished(self):
+        result = False
+        tasks = self.get_tasks()
+        result = any([task.is_finished for task in tasks])
+        return result
 
 
 # ------------------------------Task------------------------------

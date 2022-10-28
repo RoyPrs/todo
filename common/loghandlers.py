@@ -1,5 +1,5 @@
 #
-# parnia/common/loghandlers.py
+# todo/common/loghandlers.py
 #
 # See for original code:
 #   http://codeinthehole.com/writing/a-deferred-logging-file-handler-for-django/
@@ -27,10 +27,9 @@ import os
 
 
 class DeferredRotatingFileHandler(RotatingFileHandler):
-
     def __init__(self, filename, *args, **kwargs):
         self.filename = filename
-        kwargs['delay'] = True
+        kwargs["delay"] = True
         RotatingFileHandler.__init__(self, "/dev/null", *args, **kwargs)
 
     def _open(self):

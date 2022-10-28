@@ -92,7 +92,7 @@ class ProjectTaskRetrieve(
 
     def retrieve(self, request, *args, **kwargs):
         user = get_user(request)
-        my_priject = None
+        my_project = None
         if user.role == "DEVELOPER":
             my_project = self.get_project()
 
@@ -105,7 +105,7 @@ class ProjectTaskRetrieve(
             serializer = self.get_serializer(my_project)
             return Response(serializer.data)
         else:
-            return Response(my_priject)
+            return Response(my_project)
 
 
 Project_detail = ProjectTaskRetrieve.as_view()
