@@ -25,9 +25,9 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
-    "task_management",
-    "user_management",
     "django_extensions",  # to work with jupyter
+    "user_management",
+    "task_management",
 ]
 
 MIDDLEWARE = [

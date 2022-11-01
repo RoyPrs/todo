@@ -66,6 +66,19 @@ class IsProjectManager(permissions.BasePermission):
             result = True
         return result
 
+    def has_object_permission(self, request, view, obj):
+        result = False
+        request = self.get_request()
+        user = get_user(request)
+        role = None
+        if user:
+            if user.role:
+                role = user.role
+        if role == UserModel.ROLE_MAP[self.MANAGER]:
+            if user.project != obj:
+                return result
+        return result
+
 
 class IsDeveloper(permissions.BasePermission):
     """

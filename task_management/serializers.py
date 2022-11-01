@@ -8,6 +8,7 @@ import datetime
 from django.utils.translation import gettext_lazy as _
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
+from django.contrib.auth import get_user_model
 
 
 from rest_framework import serializers
@@ -15,6 +16,8 @@ from rest_framework.validators import UniqueTogetherValidator
 
 from common.serializer_mixin import SerializerMixin
 from task_management import models
+
+UserModel = get_user_model()
 
 
 def get_user(request):
@@ -62,35 +65,23 @@ class TaskSerializer(SerializerMixin, serializers.ModelSerializer):
         ]
         read_only_fields = ("public_id",)
 
-    def validate_developer(self, developer):
-        msg = _(f"Developerr must be a developer :-D")
-        for dev in developer:
+    def validate_developers(self, developers):
+        msg = _(f"Developer must be a developer :-D")
+        for dev in developers:
             if dev.role != "DEVELOPER":
                 raise serializers.ValidationError(msg)
-        return developer
-
-    # def create(self, validated_data):
-    #     developers = validated_data.pop("developer", [])
-    #     obj = super().create(validated_data)
-    #     if developers:
-    #         obj.assign_developer(developers)
-    #     return obj
+        return developers
 
     def create(self, validated_data):
-        print("in serializer create", validated_data)
         developers = validated_data.pop("developers", [])
         obj = super().create(validated_data)
-        if developers:
-            for developer in developers:
-                developer.assign_tasks([obj])
+        obj.add_developers(developers)
         return obj
 
     def update(self, instance, validated_data):
-        developers = validated_data.pop("developers", [])
-        super().update(instance, validated_data)
-
-        if developers:
-            instance.process_prerequesits(developers)
+        developers = validated_data.get("developers", None)
+        instance.add_developers(developers)
+        instance.save()
         return instance
 
     # def to_representation(self, instance):

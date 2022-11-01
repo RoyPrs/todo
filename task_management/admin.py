@@ -25,7 +25,7 @@ class ProjectAdmin(admin.ModelAdmin):
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ("pk", "name", "project", "get_developers")
+    list_display = ("pk", "name", "project", "get_developers", "public_id")
     actions = ["mark_finished", "mark_unfinished"]
 
     def mark_finished(self, request, queryset):

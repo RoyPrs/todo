@@ -29,9 +29,6 @@ from rest_framework.views import APIView
 from rest_condition import C, And, Or, Not
 
 from common.permissions import (
-    IsAdminSuperUser,
-    IsDeveloper,
-    IsProjectManager,
     IsUserActive,
 )
 from common.view_mixins import (
@@ -104,6 +101,7 @@ class SigninView(GenericAPIView):
     signin.
     """
 
+    permission_classes = (And(IsUserActive, IsAuthenticated),)
     serializer_class = SigninSerializer
     CHARS = string.ascii_letters + string.digits + "+/="
     # The regex below will ignore any additional parameters as per RFC7617.
@@ -148,7 +146,7 @@ class SignoutView(APIView):
     to signout.
     """
 
-    # permission_classes = (And(IsUserActive, IsAuthenticated, IsAnyUser),)
+    permission_classes = (And(IsUserActive, IsAuthenticated),)
 
     def post(self, request, *args, **kwargs):
         logout(request)

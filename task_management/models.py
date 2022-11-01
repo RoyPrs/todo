@@ -10,12 +10,15 @@ from django.urls import reverse
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
+# from user_management.models import User
 from common.model_mixins import ValidateOnSaveMixin
 from common import generate_public_key
 
 log = logging.getLogger("todo.user_management.models")
+UserModel = get_user_model()
+
 
 # ------------------------------Project------------------------------
 class Project(ValidateOnSaveMixin, models.Model):
@@ -36,7 +39,7 @@ class Project(ValidateOnSaveMixin, models.Model):
         help_text=_("Name of the project"),
     )
     manager = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
+        UserModel,
         on_delete=models.CASCADE,
         verbose_name=_("Project Manager"),
         help_text=_("Project Manager"),
@@ -65,10 +68,10 @@ class Project(ValidateOnSaveMixin, models.Model):
 
     def assign_project_manager(self, manager):
         role = None
-        if hasattr(manager , "role"):
+        if hasattr(manager, "role"):
             role = manager.role
-        if role != 
-        pass
+        if role:
+            manager.assign_project(self)
 
     def discharge_project_manager(self, manager):
         pass
@@ -91,7 +94,7 @@ class Project(ValidateOnSaveMixin, models.Model):
 class Task(ValidateOnSaveMixin, models.Model):
 
     public_id = models.CharField(
-        verbose_name=_("Public Course ID"),
+        verbose_name=_("Public Task ID"),
         max_length=30,
         unique=True,
         blank=True,
@@ -107,20 +110,12 @@ class Task(ValidateOnSaveMixin, models.Model):
     )
 
     developers = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
+        UserModel,
         verbose_name=_("Developer"),
         help_text=_("The developer who is sopposed to do the task"),
         symmetrical=False,
         blank=True,
     )
-
-    # developer = models.ManyToManyField(
-    #     User,
-    #     verbose_name=_("Developer"),
-    #     help_text=_("The developer who is sopposed to do the task"),
-    #     symmetrical=False,
-    #     blank=True,
-    # )
 
     project = models.ForeignKey(
         Project,
@@ -169,14 +164,13 @@ class Task(ValidateOnSaveMixin, models.Model):
         today = datetime.date.today()
         return self.due < today
 
-    def assign_developer(self, developers):
+    def add_developers(self, developers):
         """
         Assigns the task to developers.
 
         """
-        self.developer.clear()
-        developer_list = [developer.pk for developer in developers]
-        self.developer.set(developer_list)
+        for developer in developers:
+            developer.assign_tasks((self,))
 
     def discharge_developer(self, developers):
         """Removes a developer from a task"""
@@ -184,7 +178,7 @@ class Task(ValidateOnSaveMixin, models.Model):
 
     @property
     def get_developers(self):
-        """Returns list of developers assigned to the task"""
+        """Returns list of developers assigned to a task"""
 
         developers = list(self.developers.values_list("username", flat=True))
         return developers or "No developers assigned yet."

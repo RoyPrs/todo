@@ -15,7 +15,8 @@ from rest_framework import serializers
 from rest_framework.permissions import SAFE_METHODS
 
 from common.serializer_mixin import SerializerMixin
-from user_management.models import User
+
+# from user_management.models import User
 
 UserModel = get_user_model()
 

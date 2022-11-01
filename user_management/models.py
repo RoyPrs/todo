@@ -11,11 +11,7 @@ __docformat__ = "restructuredtext en"
 import logging
 
 from django.db import models
-from django.contrib.auth.models import (
-    AbstractUser,
-    BaseUserManager,
-    get_user_model,
-)
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -23,13 +19,9 @@ from django.utils import timezone
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.mail import send_mail
 
-
-UserModel = get_user_model()
-
-from task_management.models import Project
-
 from common import generate_public_key
 from common.model_mixins import ValidateOnSaveMixin
+
 
 log = logging.getLogger(__name__)
 
@@ -47,7 +39,6 @@ class UserManager(BaseUserManager):
 
         email = self.normalize_email(email)
         role = extra_fields.pop("role", self.model.DEVELOPER)
-        print("in createuser", extra_fields)
 
         if not password:
             if email:
@@ -196,71 +187,10 @@ class User(AbstractUser, ValidateOnSaveMixin, models.Model):
         return self.get_full_name_reversed()
 
     def save(self, *args, **kwargs):
-        print("in save", self)
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
         return reverse("user-detail", args=[self.public_id])
-
-    @property
-    def role(self):
-        return self.ROLE_MAP[self._role]
-
-    @property
-    def get_project(self):
-        "This method retrieves the project in which a manager/developer participates"
-        role = None
-        project = None
-        if hasattr(self, "role"):
-            role = self.role
-        if role:
-            if role == self.ROLE_MAP[UserModel.MANAGER]:
-                try:
-                    project = Project.objects.get(manager=self)
-                except Project.DoesNotExist:
-                    return project
-        elif role == self.ROLE_MAP[UserModel.DEVELOPER]:
-            try:
-                project = self.task_set.first().project
-            except:
-                return project
-        return project
-
-    def assign_project(self, project):
-        """
-        This method assigns project to a project manager.
-
-        """
-        msg = _(f"Projects can be only assigned to project managers.")
-        if hasattr(self, "role"):
-            role = self.role
-        if role and role != self.ROLE_MAP[UserModel.MANAGER]:
-            raise ValidationError({"role": msg})
-        self.project = project
-        self.save()
-
-    def assign_tasks(self, tasks):
-        """
-        This method assigns tasks to a developer.
-
-        """
-        msg1 = _(f"Tasks can be only assigned to developers.")
-        msg2 = _(f"Every developer can participate only in one project.")
-        role = None
-        if self.role:
-            role = self.role
-        if role and role != self.ROLE_MAP[UserModel.DEVELOPER]:
-            raise ValidationError({"role": msg1})
-
-        current_project = [self.get_project()]
-        new_projects = [task.project for task in tasks]
-        all_projects = new_projects + current_project
-        print("all projects", all_projects)
-
-        if len(set(all_projects)) > 1:
-            raise ValidationError({"project": msg2})
-        task_list = [task.pk for task in tasks]
-        self.task_set.set(task_list)
 
     def get_full_name_or_username(self):
         result = self.get_full_name()
@@ -275,3 +205,103 @@ class User(AbstractUser, ValidateOnSaveMixin, models.Model):
         else:
             result = self.username
         return result
+
+    @property
+    def role(self):
+        return self.ROLE_MAP[self._role]
+
+    @property
+    def get_project(self):
+        """This method retrieves the project assigned to a manager/developer"""
+
+        role = None
+        project = None
+        if hasattr(self, "role"):
+            role = self.role
+        if role:
+            if role == self.ROLE_MAP[self.MANAGER]:
+                from django.apps import apps
+
+                Project = apps.get_model("task_management", "Project")
+                try:
+                    project = Project.objects.get(manager=self)
+                except Project.DoesNotExist:
+                    return project
+            elif role == self.ROLE_MAP[self.DEVELOPER]:
+                try:
+                    project = self.task_set.first().project
+                except AttributeError:
+                    return project
+        return project
+
+    def assign_project(self, project):
+        """
+        This method assigns project to a project manager.
+
+        """
+        msg = _(f"Projects can be only assigned to project managers.")
+        if hasattr(self, "role"):
+            role = self.role
+        if role and role != self.ROLE_MAP[self.MANAGER]:
+            raise ValidationError({"role": msg})
+        self.project = project
+        self.save()
+
+    @property
+    def get_tasks(self):
+        """This method retrieves the tasks if the user is a developer.
+        For managers returns list of tasks in their project."""
+        role = None
+        tasks = None
+        if hasattr(self, "role"):
+            role = self.role
+        if role:
+            if role == self.ROLE_MAP[self.MANAGER]:
+                from django.apps import apps
+
+                Project = apps.get_model("task_management", "Project")
+                try:
+                    project = Project.objects.get(manager=self)
+                    tasks = project.tasks.all()
+                except Project.DoesNotExist:
+                    return tasks
+            elif role == self.ROLE_MAP[self.DEVELOPER]:
+                try:
+                    tasks = self.task_set.all()
+                except AttributeError:
+                    return tasks
+        return tasks
+
+    def get_tasks_list(self):
+        tasks = self.get_tasks
+        result = []
+        if tasks:
+            result = list(tasks)
+        return result
+
+    def assign_tasks(self, tasks):
+        """
+        This method assigns tasks to a developer.
+
+        """
+        msg1 = _(f"Tasks can be only assigned to developers.")
+        msg2 = _(f"Every developer can participate only in one project.")
+        role = None
+        if self.role:
+            role = self.role
+        if role:
+            if role != self.ROLE_MAP[self.DEVELOPER]:
+                raise ValidationError({"role": msg1})
+        new_projects = [task.project for task in tasks if task.project]
+        if len(set(new_projects)) > 1:
+            raise ValidationError({"project": msg2})
+
+        current_project = self.get_project
+        if current_project:
+            all_projects = new_projects + [current_project]
+        else:
+            all_projects = new_projects
+
+        if len(set(all_projects)) > 1:
+            raise ValidationError({"project": msg2})
+        self.task_set.add(*tasks)
