@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+#
+# todo/user_management/admin.py
+#
+
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import get_user_model

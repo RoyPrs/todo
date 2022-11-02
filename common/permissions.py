@@ -52,7 +52,7 @@ class IsUserActive(permissions.BasePermission):
 
 class IsProjectManager(permissions.BasePermission):
     """
-    Allows access only to a project manager with a profile.
+    Allows access only to a project manager.
     """
 
     def has_permission(self, request, view):
