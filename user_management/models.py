@@ -240,8 +240,7 @@ class User(AbstractUser, ValidateOnSaveMixin, models.Model):
 
         """
         msg = _(f"Projects can be only assigned to project managers.")
-        if hasattr(self, "role"):
-            role = self.role
+        role = getattr(self, "role", None)
         if role and role != self.ROLE_MAP[self.MANAGER]:
             raise ValidationError({"role": msg})
         self.project = project

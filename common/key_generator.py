@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# TODO/common/key_generator.py
+# todo/common/key_generator.py
 #
 
 """

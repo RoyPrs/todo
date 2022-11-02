@@ -12,7 +12,6 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import get_user_model
 
-# from user_management.models import User
 from common.model_mixins import ValidateOnSaveMixin
 from common import generate_public_key
 
@@ -67,11 +66,7 @@ class Project(ValidateOnSaveMixin, models.Model):
         return tasks or "No tasks set yet."
 
     def assign_project_manager(self, manager):
-        role = None
-        if hasattr(manager, "role"):
-            role = manager.role
-        if role:
-            manager.assign_project(self)
+        manager.assign_project(self)
 
     def discharge_project_manager(self, manager):
         pass

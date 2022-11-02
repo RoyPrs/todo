@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# parnia/common/__init__.py
+# todo/common/__init__.py
 #
 
 """
@@ -11,13 +11,9 @@ import string
 
 from .key_generator import KeyGenerator
 
-__all__ = (
-    'generate_public_key',
-    )
+__all__ = ("generate_public_key",)
 
 
 def generate_public_key():
     gen = KeyGenerator(length=20)
     return gen.generate()
-
-

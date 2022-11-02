@@ -58,25 +58,22 @@ class IsProjectManager(permissions.BasePermission):
     def has_permission(self, request, view):
         result = False
         user = get_user(request)
-        if (
-            user
-            and hasattr(user, "role")
-            and user.role == UserModel.ROLE_MAP[UserModel.MANAGER]
-        ):
+        role = None
+        if user:
+            role = getattr(user, "role", None)
+        if role and role == UserModel.ROLE_MAP[UserModel.MANAGER]:
             result = True
         return result
 
     def has_object_permission(self, request, view, obj):
         result = False
-        request = self.get_request()
         user = get_user(request)
         role = None
         if user:
-            if user.role:
-                role = user.role
-        if role == UserModel.ROLE_MAP[self.MANAGER]:
-            if user.project != obj:
-                return result
+            role = getattr(user, "role", None)
+        if role and role == UserModel.ROLE_MAP[UserModel.MANAGER]:
+            if user.project == obj:
+                result = True
         return result
 
 
@@ -88,6 +85,10 @@ class IsDeveloper(permissions.BasePermission):
     def has_permission(self, request, view):
         result = False
         user = get_user(request)
+        role = None
+        if user:
+            if user.role:
+                role = user.role
 
         if (
             user

@@ -148,8 +148,7 @@ class TaskCreate(TrapDjangoValidationErrorCreateMixin, generics.CreateAPIView):
         current_project = user.get_project
         role = None
         if user:
-            if user.role:
-                role = user.role
+            role = getattr(user, "role", None)
 
         if not self.has_permission_to_create(project, current_project, role):
             raise PermissionDenied(msg)
@@ -169,8 +168,7 @@ class TaskRetrieve(
     TrapDjangoValidationErrorUpdateMixin, generics.RetrieveAPIView
 ):
     """This class provides a method to returns list of tasks assigned to a developer
-    and if used by a manager list the tasks in their project.
-    And a method to assign a task to a developer."""
+    and if used by a manager lists the tasks in their project."""
 
     queryset = models.Task.objects.all()
     serializer_class = serializers.TaskSerializer
@@ -196,7 +194,9 @@ Mytasks = TaskRetrieve.as_view()
 
 
 class TaskUpdate(TrapDjangoValidationErrorUpdateMixin, generics.UpdateAPIView):
-    """This class provides a method to assign a task to a developer."""
+    """This class provides a method to assign a task to a developer.
+    With this update, only the developers field is allowed to change in a task,
+    other fiedls are discarded"""
 
     queryset = models.Task.objects.all()
     serializer_class = serializers.TaskSerializer
@@ -213,9 +213,7 @@ class TaskUpdate(TrapDjangoValidationErrorUpdateMixin, generics.UpdateAPIView):
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
         data = {}
-        data["developers"] = request.data[
-            "developers"
-        ]  # With this update, only the developer field is allowed to change, other fiedls are discarded
+        data["developers"] = request.data["developers"]
         serializer = self.get_serializer(instance, data=data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
@@ -230,6 +228,7 @@ class TaskUpdate(TrapDjangoValidationErrorUpdateMixin, generics.UpdateAPIView):
 
 Assigntask = TaskUpdate.as_view()
 
+
 # -------------------------------Draft-------------------------------
 # from user_management.models import User
 
@@ -238,20 +237,11 @@ Assigntask = TaskUpdate.as_view()
 def test(request, *args, **kwargs):
     # to get all sections of a term
     if request.method == "GET":
+        result = False
+        user = get_user(request)
+        role = getattr(user, "role", "role not set")
+
         # data = User.students.all().values()
         print("in the view")
-        print("data= ", request.data)
-        return Response({"name": request.data})
-
-    # def get_queryset(self):
-    # queryset = models.Task.objects.all()
-    # user = get_user(self.request)
-    # role = user.role
-    # if role == "DEVELOPER":
-    #     queryset = models.Tasks.objects.filter(developer=user)
-    # elif role == "MANAGER":
-    # project = models.Project.objects.filter(manager=user).value_list()
-    # print(project)
-    # queryset = models.Task.objects.filter(project)
-    # print(queryset)
-    # return queryset
+        # print("data= ", request.data)
+        return Response({"name": role})

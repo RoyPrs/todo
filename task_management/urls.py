@@ -17,6 +17,7 @@ urlpatterns = [
         views.Assigntask,
         name="assign_task",
     ),
+    path("test/", views.test, kwargs={"name": "roya"}, name="test"),
 ]
 # re_path(
 #     r"project/(?P<public_id>[-\w]+)/$",

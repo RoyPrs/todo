@@ -1,10 +1,9 @@
+
 FROM python:3
+ENV PYTHONUNBUFFERED 1
+RUN mkdir /todoAPI
+WORKDIR /todoAPI
+COPY requirements.txt /todoAPI/
+RUN pip install -r requirements.txt
+COPY . /todoAPI/
 
-WORKDIR /usr/src/app
-
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
-
-CMD [ "python", "./your-daemon-or-script.py" ]

@@ -15,7 +15,7 @@ from task_management.models import (
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
     list_display = ("pk", "name", "get_tasks", "manager", "public_id")
-    actions = ["mark_finished"]
+    actions = ["do_something"]
 
     def do_something(self, request, queryset):
         pass
